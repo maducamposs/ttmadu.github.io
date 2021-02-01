@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Times</title>
+    <!-- Css e script deste framework (bootstrap -> do twitter) -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+      integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+      integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+
+  <body>
+    <script>
+      const api_addr = "http://localhost/TrabalhoTrimestral/api";
+
+      /**
+       * Função que irá realizar a checagem de erros(validação). E irá realizar, o
+       * post e tratar a resposta.
+       */
+      function submit_form() {
+        // Botão de submit
+        const submitBTN = document.getElementById("submitBTN");
+
+        // Variável que eu uso apenas para guardar o erro
+        let errorMsg = "Houve um erro ao fazer o cadastro do time. \nErro: ";
+
+        // Divs que são usadas para os alertas
+        let error_field = document.getElementById("alert_error");
+        let success_field = document.getElementById("alert_success");
+
+        // Form fields
+        let time = document.getElementById("nomeTime");
+        let cidade = document.getElementById("cidadeEstado");
+        let pais = document.getElementById("pais");
+
+        let theresAnError = false;
+
+        // Tratar o time
+        if (!time.value) {
+          errorMsg += " Nome vazio.";
+          time.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar a cidade
+        if (!cidade.value) {
+          errorMsg += " Cidade vazia.";
+          cidade.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar a cidade
+        if (!pais.value) {
+          errorMsg += " País vazio.";
+          pais.classList.add("is-invalid");
+          theresAnError = true;
+        }
+
+        // Exibe o erro na tela
+        if (theresAnError) {
+          error_field.classList.remove("d-none");
+          error_field.classList.add("show");
+          error_field.innerText = errorMsg;
+          // Força a saída se não houve um erro
+          return;
+        }
+
+        // Obtêm o campo do formulário e convert para formdata
+        var form = new FormData(document.getElementById("createForm"));
+        fetch(api_addr + "/cadastro-time.php", {
+          method: "POST",
+          body: form,
+          // mode: "cors",
+        })
+          .then((res) => {
+            if (res.status === 201) {
+              success_field.classList.remove("d-none");
+              success_field.classList.add("show");
+              pais.classList.remove("is-invalid");
+              cidade.classList.remove("is-invalid");
+              time.classList.remove("is-invalid");
+            } else {
+              error_field.classList.remove("show");
+              error_field.classList.add("d-none");
+            }
+          })
+          .then(() => {
+            // Desabilita o botão, forçando o reset pelo usuário.
+            submitBTN.setAttribute("disabled", "disabled");
+          });
+      }
+
+      /**
+       * Função que irá limpar o formulário e seus atributos de css.
+       */
+      function reset_form() {
+        // Divs que são usadas para os alertas
+        let error_field = document.getElementById("alert_error");
+        let success_field = document.getElementById("alert_success");
+
+        // Form fields
+        let fields = [];
+        fields.push(document.getElementById("nomeTime"));
+        fields.push(document.getElementById("cidadeEstado"));
+        fields.push(document.getElementById("pais"));
+        // array function. Iterando sobre todos os elementos que precisam ser resetados
+        fields.forEach((element) => {
+          element.classList.remove("is-invalid");
+        });
+        // Ocultando as tags de alerta/erro
+        error_field.classList.remove("show");
+        error_field.classList.add("d-none");
+        success_field.classList.remove("show");
+        success_field.classList.add("d-none");
+
+        // Reseta o botão de submit
+        submitBTN.removeAttribute("disabled");
+      }
+    </script>
+
+    <div
+      class="container-sm d-flex justify-content-center"
+      style="height: 100vh"
+    >
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col mx-auto">
+          <div
+            class="card card-block shadow-lg p-3 mb-5 bg-white rounded"
+            style="width: 38rem"
+          >
+            <div class="card-body">
+              <h4 class="text-center">Cadastro de time</h4>
+              <hr class="mx-5" />
+              <nav aria-label="breadcrumb">
+                <ol
+                  class="breadcrumb d-flex justify-content-center"
+                  style="background-color: #fff"
+                >
+                  <!-- Botão para ir para a tela anterior -->
+                  <li class="breadcrumb-item">
+                    <a href="./index.html">Início</a>
+                  </li>
+                  <li class="breadcrumb-item active" aria-current="page">
+                    Cadastro de time
+                  </li>
+                </ol>
+              </nav>
+
+              <!-- Mensagens de sucesso/fracasso -->
+              <div
+                class="alert alert-success alert-dismissible fade d-none"
+                id="alert_success"
+                role="alert"
+              >
+                Dados cadastrados com sucesso.
+              </div>
+              <div
+                class="alert alert-danger alert-dismissible fade d-none"
+                id="alert_error"
+                role="alert"
+              ></div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <form id="createForm">
+                  <label for="nomeTime">Nome: </label>
+                  <input
+                    class="form-control"
+                    required
+                    type="text"
+                    name="nomeTime"
+                    id="nomeTime"
+                  />
+                  <br />
+
+                  <label for="cidadeEstado">Cidade -UF: </label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    name="cidadeEstado"
+                    id="cidadeEstado"
+                  />
+                  <br />
+
+                  <label for="pais">País: </label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    name="pais"
+                    id="pais"
+                  />
+                  <br />
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button
+                      type="reset"
+                      onclick="reset_form()"
+                      class="btn btn-outline-danger btn-sm mx-4"
+                    >
+                      LIMPAR
+                    </button>
+                    <button
+                      type="button"
+                      onclick="submit_form()"
+                      class="btn btn-outline-success btn-sm mx-0"
+                      id="submitBTN"
+                    >
+                      SALVAR
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

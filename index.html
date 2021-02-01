@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Partida</title>
+    <!-- Icones -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <!-- Css -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+    <!-- Jquery (+boostrap <=4). Necessário para o boostrap -->
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <!-- Scripts internos do bootstrap -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+      integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+      integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Css relativos à essa página -->
+    <style>
+      a:hover {
+        text-decoration: none;
+      }
+      a {
+        color: black;
+      }
+      .overlay {
+        background-image: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(0, 0, 0, 0.774)
+          ),
+          url("./img/fundo.jpg");
+        width: 100%;
+        background-size: cover;
+        object-fit: cover;
+        background-repeat: no-repeat;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript
+      >É necessário habilitar o javascript para o correto funcionamento da
+      página.</noscript
+    >
+
+    <!-- Header com a navbar -->
+    <header>
+      <div class="overlay" alt="Imagem wallpaper do cabeçalho"></div>
+      <div class="container justify-content-center">
+        <div
+          class="card justify-content-center"
+          style="
+            top: -24px;
+            height: 48px;
+            border-radius: 1.5em;
+            box-shadow: 0px 6px 7px #dedede;
+          "
+        >
+          <div class="row px-0 mx-0 text-center justify-content-around">
+            <div class="col text-muted">Início</div>
+            <div class="col">
+              <a href="./form-cadastro-time.html" class="text-primary">
+                Cadastro de times
+              </a>
+            </div>
+            <div class="col">
+              <a href="./form-cadastro-partida.html" class="text-primary">
+                Cadastro de partida
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Modal para as visualizações/cadastro dos lances -->
+    <div
+      class="modal fade"
+      id="lances"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">
+              <!-- O javascript irá inserir o texto aqui conforme a ação -->
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <!-- Listagem dos lances -->
+          <div class="modal-body" id="modalBody">
+            <!-- O javascript irá inserir o texto aqui conforme a ação -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualização das partidas -->
+    <div class="container justify-content-center" id="dashboard"></div>
+
+    <!-- Scripts para o correto funcionamento da página-->
+    <script>
+      const api_addr = "http://localhost/TrabalhoTrimestral/api";
+      const upload_addr = "http://localhost/TrabalhoTrimestral/uploads";
+
+      // Itens onde serão inseridos os valores
+      const titulo_modal = document.getElementById("modalTitle");
+      const corpo_modal = document.getElementById("modalBody");
+
+      /**
+       * Função responsável por validar e enviar os lances
+       */
+      function submit_form() {
+        // Botão de submit
+        const submitBTN = document.getElementById("submitBTN");
+
+        // Variável para tratar os erros
+        let errorMsg = "Houve um erro ao fazer o cadastro.\nErro:";
+
+        // Divs que são usadas para os alertas
+        const error_field = document.getElementById("alert_error");
+        const success_field = document.getElementById("alert_success");
+
+        let theresAnError = false;
+
+        // Obtém os campos do formulário
+        const gerador = document.getElementById("gerador");
+        const horario = document.getElementById("horario");
+        const descricao = document.getElementById("lance");
+        const foto = document.getElementById("foto");
+
+        // Tratar gerador
+        if (!gerador.value) {
+          errorMsg += " Gerador vazio.";
+          gerador.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar horario
+        if (!horario.value) {
+          errorMsg += " Horário vazio.";
+          horario.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar descricao
+        if (!descricao.value) {
+          errorMsg += " Descrição vazia.";
+          descricao.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar foto
+        if (foto.files.length === 0) {
+          errorMsg += " Foto vazia.";
+          foto.classList.add("is-invalid");
+          theresAnError = true;
+        }
+
+        // Exibe o erro na tela
+        if (theresAnError) {
+          error_field.classList.remove("d-none");
+          error_field.classList.add("show");
+          error_field.innerText = errorMsg;
+          // Força a saída se não houve um erro
+          return;
+        }
+
+        // Obtêm o campo do formulário e convert para formdata
+        var form = new FormData(document.getElementById("createForm"));
+        fetch(api_addr + "/cadastro-lance.php", {
+          method: "POST",
+          body: form,
+        })
+          .then(async (res) => {
+            if (res.status === 201) {
+              success_field.classList.remove("d-none");
+              success_field.classList.add("show");
+              gerador.classList.remove("is-invalid");
+              horario.classList.remove("is-invalid");
+              descricao.classList.remove("is-invalid");
+              foto.classList.remove("is-invalid");
+            } else {
+              error_field.classList.add("show");
+              error_field.classList.remove("d-none");
+              error_field.innerText = await res.text();
+            }
+          })
+          .then(() => {
+            // Desabilita o botão, forçando o reset pelo usuário.
+            submitBTN.setAttribute("disabled", "disabled");
+          });
+      }
+
+      /**
+       * Reseta o formulário
+       */
+      function reset_form() {
+        // Botão de submit
+        const submitBTN = document.getElementById("submitBTN");
+
+        // Divs que são usadas para os alertas
+        const error_field = document.getElementById("alert_error");
+        const success_field = document.getElementById("alert_success");
+
+        // Limpa os alertas
+        success_field.classList.add("d-none");
+        success_field.classList.remove("show");
+        error_field.classList.add("d-none");
+        error_field.classList.remove("show");
+
+        // Obtém os campos do formulário
+        const gerador = document.getElementById("gerador");
+        const horario = document.getElementById("horario");
+        const descricao = document.getElementById("lance");
+        const foto = document.getElementById("foto");
+
+        // Remove o css de erro
+        gerador.classList.remove("is-invalid");
+        horario.classList.remove("is-invalid");
+        descricao.classList.remove("is-invalid");
+        foto.classList.remove("is-invalid");
+
+        // Reseta o botão de submit
+        submitBTN.removeAttribute("disabled");
+      }
+
+      /**
+       * Abre a tela para criar um lance
+       */
+      function create_lance(partida) {
+        titulo_modal.innerText = "Cadastro de lance";
+
+        corpo_modal.innerHTML = `
+          <form id="createForm">
+
+            <!-- Mensagens de sucesso/fracasso -->
+              <div
+                class="alert alert-success alert-dismissible fade d-none"
+                id="alert_success"
+                role="alert"
+              >
+                Dados cadastrados com sucesso.
+              </div>
+              <div
+                class="alert alert-danger alert-dismissible fade d-none"
+                id="alert_error"
+                role="alert"
+              ></div>
+
+
+            <!-- Id da partida -->
+            <input type="hidden" name="partida" value="${partida}"/>
+
+            <!-- Itens -->
+            <div class="container">
+              <div class="row pb-3">
+                <div class="col">
+                  <label for="gerador">Gerador: </label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    name="gerador"
+                    id="gerador"
+                  />
+                </div>
+              </div>
+
+              <div class="row pb-3">
+                <div class="col">
+                  <label for="horario">Horário: </label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    name="horario"
+                    id="horario"
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col">
+                  <label for="lance">Descrição: </label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    name="lance"
+                    id="lance"
+                  />
+                </div>
+              </div>
+
+              <div class="row pb-3">
+                <div class="col-12 mb-3">
+                  <label for="foto" class="text-wrap">Upload</label>
+                  <input type="file" class="form-control text-wrap" id="foto" name="foto">
+                </div>
+              </div>
+
+            </div>
+
+
+            <!-- Botões -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button
+                type="reset"
+                onclick="reset_form()"
+                class="btn btn-outline-danger btn-sm mx-4"
+              >
+                LIMPAR
+              </button>
+              <button
+                type="button"
+                onclick="submit_form()"
+                class="btn btn-outline-success btn-sm mx-0"
+                id="submitBTN"
+              >
+                SALVAR
+              </button>
+            </div>
+          </form>
+        `;
+
+        // Exibe a modal
+        $("#lances").modal("show");
+      }
+
+      /**
+       * Exibe uma modal com base na partida. Mostrando todos os lances
+       * @param partida Id da partida para carregar os lances.
+       */
+      function open_lance(partida) {
+        // Obtém os lances desta partida
+        const lance_string = api_addr + "/lances-partida.php/?partida=";
+        fetch(lance_string + partida, { method: "GET" })
+          .then((res) => {
+            // TODO: Tratar os erros diferentes de OK
+            return res.json();
+          })
+          .then((res) => {
+            console.log("Construindo os itens");
+            titulo_modal.innerText = `Visualização dos lances`;
+
+            corpo_modal.innerHTML = `
+            <div class="container" id="items_lance"></div>`;
+
+            const items = document.getElementById("items_lance");
+            for (const item of res) {
+              items.innerHTML += `
+              <div style="height:150px">
+
+              <div class="row py-2 align-items-center">
+                <div class="col-4">
+                  <img class="image-fluid" src="${
+                    upload_addr + "/" + item.foto
+                  }" style="width:100px; height:100px;
+                    background-size: cover;
+                    object-fit: cover; border-radius: 10%"/>
+                </div>
+                <div class="col-8">
+                  <strong> Gerador: </strong> ${item.gerador} <br/>
+                  <strong> Horário: </strong> ${item.horario} <br/>
+                  <strong> Lance: </strong> ${item.lance} <br/>
+                </div>
+              </div>
+
+              <hr class="px-5" />
+
+              </div>`;
+            }
+            // Chamada do jquery do boostrap
+            $("#lances").modal("show");
+          });
+      }
+
+      /**
+       * Obtêm os itens de partida
+       */
+      function get_partida() {
+        // Obtém o campo de select e popula ele
+        const dashboard = document.getElementById("dashboard");
+
+        fetch(api_addr + "/todas-partidas.php", { method: "GET" })
+          .then((res) => {
+            // TODO: Poderia verificar o status da resposta (se não deu erro no get da api)
+            // Realiza a conversão para trabalhar com o vetor
+            return res.json();
+          })
+          .then((partidas) => {
+            // TODO: Verificar e exibir mensagem caso não tenha time cadastrado no banco.
+            for (const item of partidas) {
+              // Adiciona no html
+              dashboard.innerHTML += `
+                    <div class="row mx-5 my-5 justify-content-center">
+                        <div class="card shadow rounded" style="width: 80%">
+                            <div class="card-body">
+                                <div class="row justify-content-around">
+                                    <div class="col-4">
+                                        <input class="form-control" type="text" placeholder=${item.timeCasa} readonly>
+                                    </div>
+                                    <div class="col-1">
+                                        <input class="form-control" type="text" placeholder=${item.golsCasa} readonly>
+                                    </div>
+                                    <h3>X</h3>
+                                    <div class="col-1">
+                                        <input class="form-control" type="text" placeholder=${item.golsFora} readonly>
+                                    </div>
+                                    <div class="col-4">
+                                        <input class="form-control" type="text" placeholder=${item.timeFora} readonly>
+                                    </div>
+                                </div>
+                                <div class="row pt-3 pb-0 mx-3">
+                                    <p class="card-text">${item.localizacao}, ${item.dataa}</p>
+                                </div>
+                                <div class="row pt-0 d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" onclick="create_lance(${item.idPartida})" class="btn btn-outline-primary btn-sm mx-0"><i class="fa fa-plus"></i>
+                                    Add lance
+                                    </button>
+                                    <button type="button" onclick="open_lance(${item.idPartida})" class="btn btn-outline-primary btn-sm mx-4"><i class="fa fa-bars"></i>
+                                    Listar lances
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  `;
+            }
+          });
+      }
+
+      get_partida();
+    </script>
+  </body>
+</html>
