@@ -1,249 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Partida</title>
+    <!-- Css e script deste framework (bootstrap -> do twitter) -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+      integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+      integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+      crossorigin="anonymous"
+    ></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cadastro de Partida</title>
-  <!-- Css e script deste framework (bootstrap -> do twitter) -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous" />
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-    integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-    crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-    integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-    crossorigin="anonymous"></script>
-</head>
+  <body>
+    <script>
+      // Variável que eu uso apenas para guardar o erro
+      let errorMsg = "Houve um erro ao fazer o cadastro da partida. \nErro: ";
+      const api_addr = "http://34.232.65.58/api/";
 
-<body>
-  <script>
-    // Variável que eu uso apenas para guardar o erro
-    let errorMsg = "Houve um erro ao fazer o cadastro da partida. \nErro: ";
-    const api_addr = "http://localhost/TrabalhoTrimestral/api";
+      /**
+       * Função para obter os dados do usuário
+       */
+      function get_team() {
+        // Obtém o campo de select e popula ele
+        const selects = document.getElementsByTagName("select");
 
-    /**
-     * Função para obter os dados do usuário
-     */
-    function get_team() {
-      // Obtém o campo de select e popula ele
-      const selects = document.getElementsByTagName("select");
-
-      fetch(api_addr + "/todos-times.php", { method: "GET" })
-        .then((res) => {
-          // TODO: Poderia verificar o status da resposta (se não deu erro no get da api)
-          // Realiza a conversão para trabalhar com o vetor
-          return res.json();
-        })
-        .then((times) => {
-          // TODO: Verificar e exibir mensagem caso não tenha time cadastrado no banco.
-          for (const item of times) {
-            // Adiciona no html
-            for (const time of selects) {
-              time.innerHTML += `<option value="${item.idTime}">${item.nome}</option>`;
+        fetch(api_addr + "/todos-times.php", { method: "GET" })
+          .then((res) => {
+            // TODO: Poderia verificar o status da resposta (se não deu erro no get da api)
+            // Realiza a conversão para trabalhar com o vetor
+            return res.json();
+          })
+          .then((times) => {
+            // TODO: Verificar e exibir mensagem caso não tenha time cadastrado no banco.
+            for (const item of times) {
+              // Adiciona no html
+              for (const time of selects) {
+                time.innerHTML += `<option value="${item.idTime}">${item.nome}</option>`;
+              }
             }
-          }
-        });
-    }
-
-    /**
-     * Função que irá realizar a checagem de erros(validação). E irá realizar, o
-     * post e tratar a resposta.
-     */
-    function submit_form() {
-      // Botão de submit
-      const submitBTN = document.getElementById("submitBTN");
-
-      // Divs que são usadas para os alertas
-      let error_field = document.getElementById("alert_error");
-      let success_field = document.getElementById("alert_success");
-
-      // Form fields
-      let gol1 = document.getElementById("gol1");
-      let gol2 = document.getElementById("gol2");
-      let data = document.getElementById("data");
-      let local = document.getElementById("local");
-
-      let theresAnError = false;
-
-      // Tratar o gol1
-      if (!gol1.value) {
-        errorMsg += " Gol I vazio.";
-        gol1.classList.add("is-invalid");
-        theresAnError = true;
-      }
-      // Tratar o gol2
-      if (!gol2.value) {
-        errorMsg += " Gol II vazio.";
-        gol2.classList.add("is-invalid");
-        theresAnError = true;
-      }
-      // Tratar a data
-      if (!data.value) {
-        errorMsg += " Data vazia.";
-        data.classList.add("is-invalid");
-        theresAnError = true;
-      }
-      // Tratar a local
-      if (!local.value) {
-        errorMsg += " Local vazio.";
-        local.classList.add("is-invalid");
-        theresAnError = true;
+          });
       }
 
-      // Exibe o erro na tela
-      if (theresAnError) {
-        error_field.classList.remove("d-none");
-        error_field.classList.add("show");
-        error_field.innerText = errorMsg;
-        // Força a saída se não houve um erro
-        return;
-      }
+      /**
+       * Função que irá realizar a checagem de erros(validação). E irá realizar, o
+       * post e tratar a resposta.
+       */
+      function submit_form() {
+        // Botão de submit
+        const submitBTN = document.getElementById("submitBTN");
 
-      // Obtêm o campo do formulário e convert para formdata
-      var form = new FormData(document.getElementById("createForm"));
-      fetch(api_addr + "/cadastro-partida.php", {
-        method: "POST",
-        body: form,
-      })
-        .then((res) => {
-          if (res.status === 201) {
-            success_field.classList.remove("d-none");
-            success_field.classList.add("show");
-          } else {
-            error_field.remove("show");
-            error_field.add("d-none");
-            gol1.classList.add("is-valid");
-            gol2.classList.add("is-valid");
-            data.classList.add("is-valid");
-            local.classList.add("is-valid");
-          }
+        // Divs que são usadas para os alertas
+        let error_field = document.getElementById("alert_error");
+        let success_field = document.getElementById("alert_success");
+
+        // Form fields
+        let gol1 = document.getElementById("gol1");
+        let gol2 = document.getElementById("gol2");
+        let data = document.getElementById("data");
+        let local = document.getElementById("local");
+
+        let theresAnError = false;
+
+        // Tratar o gol1
+        if (!gol1.value) {
+          errorMsg += " Gol I vazio.";
+          gol1.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar o gol2
+        if (!gol2.value) {
+          errorMsg += " Gol II vazio.";
+          gol2.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar a data
+        if (!data.value) {
+          errorMsg += " Data vazia.";
+          data.classList.add("is-invalid");
+          theresAnError = true;
+        }
+        // Tratar a local
+        if (!local.value) {
+          errorMsg += " Local vazio.";
+          local.classList.add("is-invalid");
+          theresAnError = true;
+        }
+
+        // Exibe o erro na tela
+        if (theresAnError) {
+          error_field.classList.remove("d-none");
+          error_field.classList.add("show");
+          error_field.innerText = errorMsg;
+          // Força a saída se não houve um erro
+          return;
+        }
+
+        // Obtêm o campo do formulário e convert para formdata
+        var form = new FormData(document.getElementById("createForm"));
+        fetch(api_addr + "/cadastro-partida.php", {
+          method: "POST",
+          body: form,
         })
-        .then(() => {
-          // Desabilita o botão, forçando o reset pelo usuário.
-          submitBTN.setAttribute("disabled", "disabled");
+          .then((res) => {
+            if (res.status === 201) {
+              success_field.classList.remove("d-none");
+              success_field.classList.add("show");
+            } else {
+              error_field.remove("show");
+              error_field.add("d-none");
+              gol1.classList.add("is-valid");
+              gol2.classList.add("is-valid");
+              data.classList.add("is-valid");
+              local.classList.add("is-valid");
+            }
+          })
+          .then(() => {
+            // Desabilita o botão, forçando o reset pelo usuário.
+            submitBTN.setAttribute("disabled", "disabled");
+          });
+      }
+
+      /**
+       * Função que irá limpar o formulário e seus atributos de css.
+       */
+      function reset_form() {
+        // Divs que são usadas para os alertas
+        let error_field = document.getElementById("alert_error");
+        let success_field = document.getElementById("alert_success");
+
+        // Form fields
+        let fields = [];
+        fields.push(document.getElementById("gol1"));
+        fields.push(document.getElementById("gol2"));
+        fields.push(document.getElementById("data"));
+        fields.push(document.getElementById("local"));
+
+        // array function. Iterando sobre todos os elementos que precisam ser resetados
+        fields.forEach((element) => {
+          element.classList.remove("is-invalid");
         });
-    }
+        // Ocultando as tags de alerta/erro
+        error_field.classList.remove("show");
+        error_field.classList.add("d-none");
+        success_field.classList.remove("show");
+        success_field.classList.add("d-none");
 
-    /**
-     * Função que irá limpar o formulário e seus atributos de css.
-     */
-    function reset_form() {
-      // Divs que são usadas para os alertas
-      let error_field = document.getElementById("alert_error");
-      let success_field = document.getElementById("alert_success");
+        // Reseta o botão de submit
+        submitBTN.removeAttribute("disabled");
+      }
 
-      // Form fields
-      let fields = [];
-      fields.push(document.getElementById("gol1"));
-      fields.push(document.getElementById("gol2"));
-      fields.push(document.getElementById("data"));
-      fields.push(document.getElementById("local"));
+      /** Get data **/
+      get_team();
+    </script>
 
-      // array function. Iterando sobre todos os elementos que precisam ser resetados
-      fields.forEach((element) => {
-        element.classList.remove("is-invalid");
-      });
-      // Ocultando as tags de alerta/erro
-      error_field.classList.remove("show");
-      error_field.classList.add("d-none");
-      success_field.classList.remove("show");
-      success_field.classList.add("d-none");
+    <!-- Visualização -->
+    <div
+      class="container-sm d-flex justify-content-center"
+      style="height: 100vh"
+    >
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col mx-auto">
+          <div
+            class="card card-block shadow-lg p-3 mb-5 bg-white rounded"
+            style="width: 38rem"
+          >
+            <div class="card-body">
+              <h4 class="text-center">Cadastro de partida</h4>
+              <hr class="mx-5" />
+              <nav aria-label="breadcrumb">
+                <ol
+                  class="breadcrumb d-flex justify-content-center"
+                  style="background-color: #fff"
+                >
+                  <!-- Botão para ir para a tela anterior -->
+                  <li class="breadcrumb-item">
+                    <a href="./index.html">Início</a>
+                  </li>
+                  <li class="breadcrumb-item active" aria-current="page">
+                    Cadastro de partida
+                  </li>
+                </ol>
+              </nav>
 
-      // Reseta o botão de submit
-      submitBTN.removeAttribute("disabled");
-    }
-
-    /** Get data **/
-    get_team();
-  </script>
-
-  <!-- Visualização -->
-  <div class="container-sm d-flex justify-content-center" style="height: 100vh">
-    <div class="row h-100 justify-content-center align-items-center">
-      <div class="col mx-auto">
-        <div class="card card-block shadow-lg p-3 mb-5 bg-white rounded" style="width: 38rem">
-          <div class="card-body">
-            <h4 class="text-center">Cadastro de partida</h4>
-            <hr class="mx-5" />
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb d-flex justify-content-center" style="background-color: #fff">
-                <!-- Botão para ir para a tela anterior -->
-                <li class="breadcrumb-item">
-                  <a href="./index.html">Início</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">
-                  Cadastro de partida
-                </li>
-              </ol>
-            </nav>
-
-            <!-- Mensagens de sucesso/fracasso -->
-            <div class="alert alert-success alert-dismissible fade d-none" id="alert_success" role="alert">
-              Dados cadastrados com sucesso.
+              <!-- Mensagens de sucesso/fracasso -->
+              <div
+                class="alert alert-success alert-dismissible fade d-none"
+                id="alert_success"
+                role="alert"
+              >
+                Dados cadastrados com sucesso.
+              </div>
+              <div
+                class="alert alert-danger alert-dismissible fade d-none"
+                id="alert_error"
+                role="alert"
+              ></div>
             </div>
-            <div class="alert alert-danger alert-dismissible fade d-none" id="alert_error" role="alert"></div>
-          </div>
 
-          <!-- Form -->
-          <div class="card-body">
-            <div class="form-group">
-              <form id="createForm">
-                <div class="container">
-                  <div class="row pb-3">
-                    <div class="col-8">
-                      <label for="time1">Time 1: </label>
-                      <select class="custom-select" id="time1" name="time1"></select>
+            <!-- Form -->
+            <div class="card-body">
+              <div class="form-group">
+                <form id="createForm">
+                  <div class="container">
+                    <div class="row pb-3">
+                      <div class="col-8">
+                        <label for="time1">Time 1: </label>
+                        <select
+                          class="custom-select"
+                          id="time1"
+                          name="time1"
+                        ></select>
+                      </div>
+                      <div class="col-4">
+                        <label for="gol1">Gol 1: </label>
+                        <input
+                          class="form-control"
+                          type="text"
+                          name="gol1"
+                          id="gol1"
+                        />
+                      </div>
                     </div>
-                    <div class="col-4">
-                      <label for="gol1">Gol 1: </label>
-                      <input class="form-control" type="text" name="gol1" id="gol1" />
+                    <div class="row pb-3">
+                      <div class="col-8">
+                        <label for="time2">Time 2: </label>
+                        <select
+                          class="custom-select"
+                          id="time2"
+                          name="time2"
+                        ></select>
+                      </div>
+                      <div class="col-4">
+                        <label for="gol2">Gol 2: </label>
+                        <input
+                          class="form-control"
+                          type="text"
+                          name="gol2"
+                          id="gol2"
+                        />
+                      </div>
+                    </div>
+                    <div class="row pb-3">
+                      <div class="col">
+                        <label for="data">Data: </label>
+                        <input
+                          class="form-control"
+                          type="text"
+                          name="data"
+                          id="data"
+                        />
+                      </div>
+                    </div>
+                    <div class="row pb-3">
+                      <div class="col">
+                        <label for="local">Local: </label>
+                        <input
+                          class="form-control"
+                          type="text"
+                          name="local"
+                          id="local"
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div class="row pb-3">
-                    <div class="col-8">
-                      <label for="time2">Time 2: </label>
-                      <select class="custom-select" id="time2" name="time2"></select>
-                    </div>
-                    <div class="col-4">
-                      <label for="gol2">Gol 2: </label>
-                      <input class="form-control" type="text" name="gol2" id="gol2" />
-                    </div>
-                  </div>
-                  <div class="row pb-3">
-                    <div class="col">
-                      <label for="data">Data: </label>
-                      <input class="form-control" type="text" name="data" id="data" />
-                    </div>
-                  </div>
-                  <div class="row pb-3">
-                    <div class="col">
-                      <label for="local">Local: </label>
-                      <input class="form-control" type="text" name="local" id="local" />
-                    </div>
-                  </div>
-                </div>
 
-                <!-- Botões -->
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                  <button type="reset" onclick="reset_form()" class="btn btn-outline-danger btn-sm mx-4">
-                    LIMPAR
-                  </button>
-                  <button type="button" onclick="submit_form()" class="btn btn-outline-success btn-sm mx-0"
-                    id="submitBTN">
-                    SALVAR
-                  </button>
-                </div>
-              </form>
+                  <!-- Botões -->
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button
+                      type="reset"
+                      onclick="reset_form()"
+                      class="btn btn-outline-danger btn-sm mx-4"
+                    >
+                      LIMPAR
+                    </button>
+                    <button
+                      type="button"
+                      onclick="submit_form()"
+                      class="btn btn-outline-success btn-sm mx-0"
+                      id="submitBTN"
+                    >
+                      SALVAR
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</body>
-
+  </body>
 </html>
